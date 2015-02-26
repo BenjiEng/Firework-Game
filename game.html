@@ -1,0 +1,316 @@
+<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+
+<script>
+var ctx = document.getElementById("ctx").getContext("2d");
+ctx.font = '30px Arial';
+
+var HEIGHT = 500;
+var WIDTH = 500;
+var timeWhenGameStarted = Date.now();	//return time in ms
+var frameCounter = 0; //every time we update we +1
+var score = 0
+
+//PLAYER
+var player = {
+  x:50,
+  spdX:30,
+  y:40,
+  spdY:5,
+  name:'P',
+  hp:10,
+  width:20,
+  height:20,
+  color:'yellow',
+  atkSpd: 1,
+  atkCounter: 0,
+};
+
+//MOUSE
+document.onmousemove = function(mouse){
+  var mouseX = mouse.clientX - 8;
+  var mouseY = mouse.clientY - 8;
+
+  if (mouseX < player.width/2) {
+    mouseX = player.width/2;
+  } else if (mouseX > WIDTH - player.width/2) {
+    mouseX = WIDTH - player.width/2;
+  }
+
+  if (mouseY < player.height/2 ) {
+    mouseY = player.height/2;
+  } else if (mouseY > HEIGHT - player.height/2) {
+    mouseY = HEIGHT - player.height/2;
+  }
+
+  player.x = mouseX;
+  player.y = mouseY;
+}
+
+document.onkeydown = function(event){
+  if (event.keyCode === 65) { //a
+    if (player.atkCounter > 25) {
+      generateBullet();
+      player.atkCounter = 0;
+    }
+  }
+}
+
+
+//ENEMY CONSTRUCTOR
+var enemyList = {};
+
+Enemy = function (id,x,y,spdX,spdY,width,height){
+  var enemy = {
+    x: x,
+    spdX: spdX,
+    y: y,
+    spdY: spdY,
+    name: 'E',
+    id: id,
+    width: width,
+    height: height,
+    color: 'red',
+  };
+  enemyList[id] = enemy;
+}
+
+generateEnemy = function() {
+  var x = Math.random() * WIDTH;
+  var spdX = (Math.random() * 5) + 5;
+  var y = Math.random() * HEIGHT;
+  var spdY = (Math.random() * 5) + 5;
+  var height = (Math.random() * 30) + 5; //+5 bc if it is 0 we can't see [btwn 5 and 30]
+  var width = (Math.random() * 30) + 5;
+  var id = Math.random();
+  Enemy(id, x, y, spdX, spdY, width, height);
+}
+
+//UPGRADE CONSTRUCTOR
+var upgradeList = {};
+
+Upgrade = function (id,x,y,spdX,spdY,width,height, type, color){
+  var upgrade = {
+    x: x,
+    spdX: spdX,
+    y: y,
+    spdY: spdY,
+    name: 'U',
+    id: id,
+    width: width,
+    height: height,
+    type: type,
+    color: color
+  };
+  upgradeList[id] = upgrade;
+}
+
+generateUpgrade = function() {
+  var x = Math.random() * WIDTH;
+  var spdX = 0;
+  var y = Math.random() * HEIGHT;
+  var spdY = 0;
+  var id = Math.random();
+
+  if(Math.random() < 0.5) {
+    var type = 'score';
+    var color = 'orange';
+    var height = 20;
+    var width = 20;
+  } else {
+    var type = 'atkSpd';
+    var color = 'blue';
+    var height = 10;
+    var width = 10;
+  }
+
+  Upgrade(id, x, y, spdX, spdY, width, height, type, color);
+}
+
+//BULLETS
+var bulletList = {};
+
+Bullet = function (id,x,y,spdX,spdY,width,height){
+  var bullet = {
+    x: x,
+    spdX: spdX,
+    y: y,
+    spdY: spdY,
+    name: 'B',
+    id: id,
+    width: width,
+    height: height,
+    color: 'black',
+    timer: 0,
+  };
+  bulletList[id] = bullet;
+}
+
+generateBullet = function() {
+  var x = player.x;
+  var y = player.y;
+
+  var height = 5;
+  var width = 5;
+  var id = Math.random();
+
+  var angle = Math.random() * 360;
+  var spdY = Math.cos(angle/180 * Math.PI) * 5;
+  var spdX = Math.sin(angle/180 * Math.PI) * 5;
+
+  Bullet(id, x, y, spdX, spdY, width, height);
+}
+
+//COLLISION
+getDistanceBetweenEntity = function (entity1,entity2){	//return distance (number)
+  var vx = entity1.x - entity2.x;
+  var vy = entity1.y - entity2.y;
+  return Math.sqrt(vx*vx+vy*vy);
+}
+
+testCollisionEntity = function (entity1,entity2){	//return if colliding (true/false)
+  var rect1 = {
+    x:entity1.x-entity1.width/2,
+    y:entity1.y-entity1.height/2,
+    width:entity1.width,
+    height:entity1.height,
+  }
+  var rect2 = {
+    x:entity2.x-entity2.width/2,
+    y:entity2.y-entity2.height/2,
+    width:entity2.width,
+    height:entity2.height,
+  }
+  return testCollisionRectRect(rect1,rect2);
+}
+
+testCollisionRectRect = function(rect1,rect2){
+  return rect1.x <= rect2.x+rect2.width
+  && rect2.x <= rect1.x+rect1.width
+  && rect1.y <= rect2.y + rect2.height
+  && rect2.y <= rect1.y + rect1.height;
+}
+
+//RENDERS
+updateEntity = function (something){
+  updateEntityPosition(something);
+  drawEntity(something);
+}
+updateEntityPosition = function(something){
+  something.x += something.spdX;
+  something.y += something.spdY;
+
+  if(something.x < 0 || something.x > WIDTH){
+    something.spdX = -something.spdX;
+  }
+  if(something.y < 0 || something.y > HEIGHT){
+    something.spdY = -something.spdY;
+  }
+}
+
+drawEntity = function(something){
+  ctx.save();
+  ctx.fillStyle = something.color;
+  ctx.fillRect(something.x-something.width/2,something.y-something.height/2,something.width,something.height);
+  ctx.restore();
+}
+
+
+//BOARD UPDATE
+update = function(){
+  ctx.clearRect(0,0,WIDTH,HEIGHT);
+  frameCounter += 1;
+  score += 1;
+  if (frameCounter % 100 === 0) { //every 4 sec
+    generateEnemy();
+  }
+
+  if (frameCounter % 125 === 0) { //5sec
+    generateUpgrade();
+  }
+
+  player.atkCounter += player.atkSpd;
+
+
+  for(var key in enemyList){ //enemies
+    updateEntity(enemyList[key]);
+    var isColliding = testCollisionEntity(player, enemyList[key]);
+
+    if(isColliding){
+      player.hp = player.hp - 1;
+    }
+  }
+
+  for(var key in upgradeList){ //upgrades
+    updateEntity(upgradeList[key]);
+
+    var isColliding = testCollisionEntity(player, upgradeList[key]);
+    if(isColliding){
+      if (upgradeList[key].type === 'score') {
+        score += 1000;
+        delete upgradeList[key];
+      } else if (upgradeList[key].type === 'atkSpd') {
+        player.atkSpd += 3;
+        delete upgradeList[key];
+      }
+    }
+  }
+
+  for(var bKey in bulletList){ //bullets
+    updateEntity(bulletList[bKey]);
+    var remove = false;
+
+    bulletList[bKey].timer += 1; //increase lifetime by 1
+    if (bulletList[bKey].timer > 10) {
+      remove = true;
+    }
+
+    for(var eKey in enemyList){
+      var isColliding = testCollisionEntity(bulletList[bKey], enemyList[eKey]);
+      if (isColliding) {
+        remove = true;
+        delete enemyList[eKey];
+        break;
+      }
+    }
+
+    if (remove) {
+      delete (bulletList[bKey]);
+    }
+  }
+
+  if(player.hp <= 0){ //if W E  L O S T  B O Y S
+    var timeSurvived = Date.now() - timeWhenGameStarted;
+    console.log("You lost. You survived for " + timeSurvived + " ms.");
+    startNewGame();
+  }
+
+  drawEntity(player);
+  ctx.fillText("HP: " + player.hp, 0, 30);
+  ctx.fillText("SCORE: " + score, 300, 30);
+}
+
+startNewGame = function(){
+  player.hp = 10;
+  enemyList = {};
+  upgradeList = {};
+  bulletList = {};
+
+  generateEnemy();
+  generateEnemy();
+  generateEnemy();
+
+  timeWhenGameStarted = Date.now();
+  frameCounter = 0;
+  score = 0;
+}
+
+//SETUP GAME
+
+startNewGame();
+setInterval(update, 40);
+
+
+
+
+
+</script>
