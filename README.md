@@ -1,5 +1,5 @@
 PLAY AS A SPARKLER
-[Live Link]()
+[Live Link](http://benjieng.github.io/Firework-Game/game.html)
 
 A Javascript game using HTML5 canvas
 
