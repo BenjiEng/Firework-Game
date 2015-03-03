@@ -1,8 +1,9 @@
-<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+<canvas id="ctx" width="500" height="500" style="border:1px solid #000000; background-color: black;"></canvas>
 
 <script>
 var ctx = document.getElementById("ctx").getContext("2d");
-ctx.font = '30px Arial';
+ctx.font = "30px Verdana";
+ctx.fillStyle = 'white';
 
 var HEIGHT = 500;
 var WIDTH = 500;
@@ -139,7 +140,7 @@ Bullet = function (id,x,y,spdX,spdY,width,height){
     id: id,
     width: width,
     height: height,
-    color: 'black',
+    color: 'yellow',
     timer: 0,
   };
   bulletList[id] = bullet;
@@ -280,7 +281,7 @@ update = function(){
 
   if(player.hp <= 0){ //if W E  L O S T  B O Y S
     var timeSurvived = Date.now() - timeWhenGameStarted;
-    console.log("You lost. You survived for " + timeSurvived + " ms.");
+    alert("You lost. You survived for " + timeSurvived + " ms.");
     startNewGame();
   }
 
@@ -308,9 +309,13 @@ startNewGame = function(){
 
 startNewGame();
 setInterval(update, 40);
-
-
-
-
-
 </script>
+
+<ul>Controls:
+  <li>Use mouse to move.</li>
+  <li>Hold "A" to shoot off sparklers.</li>
+  <li>Avoid the red blocks.</li>
+  <li>Collect the blue blocks to increase shot speed.</li>
+  <li>Collect the orange blocks to boost score by 1000.</li>
+  <li>Try to survive.</li>
+</ul>
