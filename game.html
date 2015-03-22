@@ -1,15 +1,20 @@
-<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+<head>
+  <meta charset="utf-8">
+  <title>Firework</title>
+</head>
+
+
+<canvas id="ctx" width="500" height="500" style="border:1px solid #000000; background-color: black;"></canvas>
 
 <script>
 var ctx = document.getElementById("ctx").getContext("2d");
-ctx.font = '30px Arial';
-
+ctx.font = "30px Verdana";
+ctx.fillStyle = 'white';
 var HEIGHT = 500;
 var WIDTH = 500;
 var timeWhenGameStarted = Date.now();	//return time in ms
 var frameCounter = 0; //every time we update we +1
 var score = 0
-
 //PLAYER
 var player = {
   x:50,
@@ -24,28 +29,23 @@ var player = {
   atkSpd: 1,
   atkCounter: 0,
 };
-
 //MOUSE
 document.onmousemove = function(mouse){
   var mouseX = mouse.clientX - 8;
   var mouseY = mouse.clientY - 8;
-
   if (mouseX < player.width/2) {
     mouseX = player.width/2;
   } else if (mouseX > WIDTH - player.width/2) {
     mouseX = WIDTH - player.width/2;
   }
-
   if (mouseY < player.height/2 ) {
     mouseY = player.height/2;
   } else if (mouseY > HEIGHT - player.height/2) {
     mouseY = HEIGHT - player.height/2;
   }
-
   player.x = mouseX;
   player.y = mouseY;
 }
-
 document.onkeydown = function(event){
   if (event.keyCode === 65) { //a
     if (player.atkCounter > 25) {
@@ -54,11 +54,8 @@ document.onkeydown = function(event){
     }
   }
 }
-
-
 //ENEMY CONSTRUCTOR
 var enemyList = {};
-
 Enemy = function (id,x,y,spdX,spdY,width,height){
   var enemy = {
     x: x,
@@ -73,7 +70,6 @@ Enemy = function (id,x,y,spdX,spdY,width,height){
   };
   enemyList[id] = enemy;
 }
-
 generateEnemy = function() {
   var x = Math.random() * WIDTH;
   var spdX = (Math.random() * 5) + 5;
@@ -84,10 +80,8 @@ generateEnemy = function() {
   var id = Math.random();
   Enemy(id, x, y, spdX, spdY, width, height);
 }
-
 //UPGRADE CONSTRUCTOR
 var upgradeList = {};
-
 Upgrade = function (id,x,y,spdX,spdY,width,height, type, color){
   var upgrade = {
     x: x,
@@ -103,14 +97,12 @@ Upgrade = function (id,x,y,spdX,spdY,width,height, type, color){
   };
   upgradeList[id] = upgrade;
 }
-
 generateUpgrade = function() {
   var x = Math.random() * WIDTH;
   var spdX = 0;
   var y = Math.random() * HEIGHT;
   var spdY = 0;
   var id = Math.random();
-
   if(Math.random() < 0.5) {
     var type = 'score';
     var color = 'orange';
@@ -122,13 +114,10 @@ generateUpgrade = function() {
     var height = 10;
     var width = 10;
   }
-
   Upgrade(id, x, y, spdX, spdY, width, height, type, color);
 }
-
 //BULLETS
 var bulletList = {};
-
 Bullet = function (id,x,y,spdX,spdY,width,height){
   var bullet = {
     x: x,
@@ -139,34 +128,28 @@ Bullet = function (id,x,y,spdX,spdY,width,height){
     id: id,
     width: width,
     height: height,
-    color: 'black',
+    color: 'yellow',
     timer: 0,
   };
   bulletList[id] = bullet;
 }
-
 generateBullet = function() {
   var x = player.x;
   var y = player.y;
-
   var height = 5;
   var width = 5;
   var id = Math.random();
-
   var angle = Math.random() * 360;
   var spdY = Math.cos(angle/180 * Math.PI) * 5;
   var spdX = Math.sin(angle/180 * Math.PI) * 5;
-
   Bullet(id, x, y, spdX, spdY, width, height);
 }
-
 //COLLISION
 getDistanceBetweenEntity = function (entity1,entity2){	//return distance (number)
   var vx = entity1.x - entity2.x;
   var vy = entity1.y - entity2.y;
   return Math.sqrt(vx*vx+vy*vy);
 }
-
 testCollisionEntity = function (entity1,entity2){	//return if colliding (true/false)
   var rect1 = {
     x:entity1.x-entity1.width/2,
@@ -182,14 +165,12 @@ testCollisionEntity = function (entity1,entity2){	//return if colliding (true/fa
   }
   return testCollisionRectRect(rect1,rect2);
 }
-
 testCollisionRectRect = function(rect1,rect2){
   return rect1.x <= rect2.x+rect2.width
   && rect2.x <= rect1.x+rect1.width
   && rect1.y <= rect2.y + rect2.height
   && rect2.y <= rect1.y + rect1.height;
 }
-
 //RENDERS
 updateEntity = function (something){
   updateEntityPosition(something);
@@ -198,7 +179,6 @@ updateEntity = function (something){
 updateEntityPosition = function(something){
   something.x += something.spdX;
   something.y += something.spdY;
-
   if(something.x < 0 || something.x > WIDTH){
     something.spdX = -something.spdX;
   }
@@ -206,15 +186,12 @@ updateEntityPosition = function(something){
     something.spdY = -something.spdY;
   }
 }
-
 drawEntity = function(something){
   ctx.save();
   ctx.fillStyle = something.color;
   ctx.fillRect(something.x-something.width/2,something.y-something.height/2,something.width,something.height);
   ctx.restore();
 }
-
-
 //BOARD UPDATE
 update = function(){
   ctx.clearRect(0,0,WIDTH,HEIGHT);
@@ -223,26 +200,19 @@ update = function(){
   if (frameCounter % 100 === 0) { //every 4 sec
     generateEnemy();
   }
-
   if (frameCounter % 125 === 0) { //5sec
     generateUpgrade();
   }
-
   player.atkCounter += player.atkSpd;
-
-
   for(var key in enemyList){ //enemies
     updateEntity(enemyList[key]);
     var isColliding = testCollisionEntity(player, enemyList[key]);
-
     if(isColliding){
       player.hp = player.hp - 1;
     }
   }
-
   for(var key in upgradeList){ //upgrades
     updateEntity(upgradeList[key]);
-
     var isColliding = testCollisionEntity(player, upgradeList[key]);
     if(isColliding){
       if (upgradeList[key].type === 'score') {
@@ -254,16 +224,13 @@ update = function(){
       }
     }
   }
-
   for(var bKey in bulletList){ //bullets
     updateEntity(bulletList[bKey]);
     var remove = false;
-
     bulletList[bKey].timer += 1; //increase lifetime by 1
     if (bulletList[bKey].timer > 10) {
       remove = true;
     }
-
     for(var eKey in enemyList){
       var isColliding = testCollisionEntity(bulletList[bKey], enemyList[eKey]);
       if (isColliding) {
@@ -272,45 +239,41 @@ update = function(){
         break;
       }
     }
-
     if (remove) {
       delete (bulletList[bKey]);
     }
   }
-
   if(player.hp <= 0){ //if W E  L O S T  B O Y S
     var timeSurvived = Date.now() - timeWhenGameStarted;
-    console.log("You lost. You survived for " + timeSurvived + " ms.");
+    alert("You lost. You survived for " + timeSurvived + " ms.");
     startNewGame();
   }
-
   drawEntity(player);
   ctx.fillText("HP: " + player.hp, 0, 30);
   ctx.fillText("SCORE: " + score, 300, 30);
 }
-
 startNewGame = function(){
   player.hp = 10;
   enemyList = {};
   upgradeList = {};
   bulletList = {};
-
   generateEnemy();
   generateEnemy();
   generateEnemy();
-
   timeWhenGameStarted = Date.now();
   frameCounter = 0;
   score = 0;
 }
-
 //SETUP GAME
-
 startNewGame();
 setInterval(update, 40);
-
-
-
-
-
 </script>
+
+<ul>Controls:
+  <li>Use mouse to move.</li>
+  <li>Hold "A" to shoot off sparklers.</li>
+  <li>Avoid the red blocks.</li>
+  <li>Collect the blue blocks to increase shot speed.</li>
+  <li>Collect the orange blocks to boost score by 1000.</li>
+  <li>Try to survive.</li>
+</ul>
